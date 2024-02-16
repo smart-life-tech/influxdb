@@ -195,8 +195,8 @@ void loop()
   if (usbPresence == 1 && !WL_CONNECTED)
   {
     WiFi.mode(WIFI_STA);
-
-    wifiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
+    WiFi.reconnect()
+        wifiMulti.addAP(WIFI_SSID, WIFI_PASSWORD);
     wifiMulti.addAP(WIFI_SSID1, WIFI_PASSWORD1);
     wifiMulti.addAP(WIFI_SSID2, WIFI_PASSWORD2);
     wifiMulti.addAP(WIFI_SSID3, WIFI_PASSWORD3);
