@@ -48,7 +48,7 @@ Point sensorReadings("measurements");
 // Global variables to track time and battery voltage
 unsigned long startMillis = 0;
 float initialBatteryVoltage = 0.0;
-
+int fileCount = 0;
 struct DataPoint
 {
   float temperature;
@@ -86,7 +86,7 @@ void rainbow(uint8_t wait)
     }
     strip.show();
     delay(wait); // we acnt dekay here any more we will use the general 30 secs delay
-    //break;
+    // break;
   }
 }
 void saveDataToSPIFFS(float temperature, float batteryVoltage)
@@ -206,40 +206,40 @@ void loop()
       Serial.print(".");
       delay(500);
     }
+    Serial.println("wifi connected");
   }
   sensors.requestTemperatures();
-
   float temperature = sensors.getTempCByIndex(0);
   float batteryVoltage = ums3.getBatteryVoltage();
   delay(1000);
-
   sensorReadings.addField("temperature", temperature);
   sensorReadings.addField("battery_voltage", batteryVoltage);
   sensorReadings.addField("usb_presence", usbPresence);
 
-  Serial.print("Writing: ");
-  Serial.println(client.pointToLineProtocol(sensorReadings));
-
   // Send data to InfluxDB if USB power is present
   if (ums3.getVbusPresent() == 1)
   {
-    rainbow(60 * 1000 / 256); // 60 seconds divided by 256-color spectrum
-    strip.clear();
-    strip.show();
-    client.writePoint(sensorReadings);
+    if (fileCount == 0)
+    {
+      fileCount++;
+      rainbow(60 * 1000 / 256); // 60 seconds divided by 256-color spectrum
+      strip.clear();
+      strip.show();
+      if (fileCount >= 60)
+        fileCount = 0; // do thid every 60 seconds
+    }
   }
   else
   {
     WiFi.disconnect();
     WiFi.mode(WIFI_OFF);
-    // Save data to SPIFFS if USB power is not present
+    // wifiMulti.disconnect();
+    //  Save data to SPIFFS if USB power is not present
     saveDataToSPIFFS(temperature, batteryVoltage);
   }
   // client.writePoint(sensorReadings);
 
-  sensorReadings.clearFields();
-
-  if (wifiMulti.run() != WL_CONNECTED)
+  if (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("Wifi connection lost");
   }
@@ -247,6 +247,10 @@ void loop()
   {
     // Upload data from SPIFFS if WiFi connection is restored
     uploadDataFromSPIFFS();
+    Serial.print("Writing: ");
+    Serial.println(client.pointToLineProtocol(sensorReadings));
+    client.writePoint(sensorReadings);
+    sensorReadings.clearFields();
   }
   // Read battery voltage
   float currentBatteryVoltage = ums3.getBatteryVoltage();
