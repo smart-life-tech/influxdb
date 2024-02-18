@@ -195,7 +195,7 @@ void loop()
   // Check USB presence
   int usbPresence = ums3.getVbusPresent();
 
-  if (usbPresence == 1 && WiFi.status() != WL_CONNECTED)
+  if (usbPresence == 0 && WiFi.status() != WL_CONNECTED)
   {
     WiFi.mode(WIFI_STA);
     WiFi.reconnect();
@@ -230,7 +230,7 @@ void loop()
     Serial.println(client.getLastErrorMessage());
   }
   // Send data to InfluxDB if USB power is present
-  if (ums3.getVbusPresent() == 1)
+  if (ums3.getVbusPresent() == 0)
   {
     if (fileCount == 0)
     {
@@ -270,7 +270,7 @@ void loop()
   float currentBatteryVoltage = ums3.getBatteryVoltage();
 
   // Check if battery voltage is below 3.60V or 4 hours have elapsed (whichever comes first)
-  if ((currentBatteryVoltage < 3.60) || (millis() - startMillis >= 4 * 60 * 60 * 1000 && ums3.getVbusPresent()))
+  if ((currentBatteryVoltage < 3.60) || (millis() - startMillis >= 4 * 60 * 60 * 1000 && !ums3.getVbusPresent()))
   {
     // Shut down the ESP32
     // esp_deep_sleep_start();
