@@ -139,7 +139,7 @@ void initDS18B20()
 {
   sensors.begin();
 }
-
+int trial = 0;
 void setup()
 {
   Serial.begin(115200);
@@ -152,10 +152,17 @@ void setup()
   wifiMulti.addAP(WIFI_SSID2, WIFI_PASSWORD2);
   wifiMulti.addAP(WIFI_SSID3, WIFI_PASSWORD3);
   btStop();
+
   while (wifiMulti.run() != WL_CONNECTED)
   {
     Serial.print(".");
     delay(500);
+    trial++;
+    if (trial > 10)
+    {
+      trial = 0;
+      break;
+    }
   }
   Serial.println();
 
@@ -208,6 +215,12 @@ void loop()
     {
       Serial.print(".");
       delay(500);
+      trial++;
+      if (trial > 10)
+      {
+        trial = 0;
+        break;
+      }
     }
     Serial.println("wifi connected");
   }
