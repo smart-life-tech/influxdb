@@ -269,6 +269,8 @@ void loop()
   if (WiFi.status() != WL_CONNECTED)
   {
     Serial.println("Wifi connection lost");
+    //  Save data to SPIFFS if USB power is not present
+    saveDataToSPIFFS(temperature, batteryVoltage);
   }
   else
   {
