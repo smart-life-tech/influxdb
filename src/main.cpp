@@ -121,13 +121,14 @@ void uploadDataFromSPIFFS()
     file.read((uint8_t *)&dataPoint, sizeof(DataPoint));
 
     sensorReadings.clearFields();
-    sensorReadings.addField("temperature", dataPoint.temperature);
-    sensorReadings.addField("battery_voltage", dataPoint.batteryVoltage);
+    sensorReadings.addField("temperatures", dataPoint.temperature);
+    sensorReadings.addField("battery_voltages", dataPoint.batteryVoltage);
 
     Serial.print("Writing data from SPIFFS: ");
     Serial.println(client.pointToLineProtocol(sensorReadings));
 
     client.writePoint(sensorReadings);
+    delay(1000);
   }
 
   file.close();
@@ -260,6 +261,7 @@ void loop()
     fileCount = 0;
     WiFi.disconnect();
     WiFi.mode(WIFI_OFF);
+    Serial.println("wifi disconnected successfully");
     // wifiMulti.disconnect();
     //  Save data to SPIFFS if USB power is not present
     saveDataToSPIFFS(temperature, batteryVoltage);
