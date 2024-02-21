@@ -120,15 +120,14 @@ void uploadDataFromSPIFFS()
     DataPoint dataPoint;
     file.read((uint8_t *)&dataPoint, sizeof(DataPoint));
 
-    sensorReadings.clearFields();
-    sensorReadings.addField("temperatures", dataPoint.temperature);
-    sensorReadings.addField("battery_voltages", dataPoint.batteryVoltage);
-
+    //sensorReadings.clearFields();
+    sensorReadings.addField("temperature", dataPoint.temperature, 2);
+    sensorReadings.addField("battery_voltage", dataPoint.batteryVoltage, 2);
+    sensorReadings.addField("usb_presence", ums3.getVbusPresent());
     Serial.print("Writing data from SPIFFS: ");
     Serial.println(client.pointToLineProtocol(sensorReadings));
-
-    client.writePoint(sensorReadings);
-    delay(1000);
+    Serial.println(client.writePoint(sensorReadings));
+    delay(2000);
   }
 
   file.close();
@@ -281,6 +280,7 @@ void loop()
     Serial.print("Writing: ");
     Serial.println(client.pointToLineProtocol(sensorReadings));
     client.writePoint(sensorReadings);
+    Serial.println(client.writePoint(sensorReadings));
     sensorReadings.clearFields();
   }
   // Read battery voltage
