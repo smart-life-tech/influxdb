@@ -121,7 +121,7 @@ void uploadDataFromSPIFFS()
 
     if (bytesRead == sizeof(DataPoint))
     {
-      sensorReadings.clearFields();
+      //sensorReadings.clearFields();
       sensorReadings.addField("temperature", dataPoint.temperature);
       sensorReadings.addField("battery_voltage", dataPoint.batteryVoltage);
 
