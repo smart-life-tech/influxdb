@@ -120,7 +120,7 @@ void uploadDataFromSPIFFS()
     DataPoint dataPoint;
     file.read((uint8_t *)&dataPoint, sizeof(DataPoint));
 
-    //sensorReadings.clearFields();
+    // sensorReadings.clearFields();
     sensorReadings.addField("temperature", dataPoint.temperature, 2);
     sensorReadings.addField("battery_voltage", dataPoint.batteryVoltage, 2);
     sensorReadings.addField("usb_presence", ums3.getVbusPresent());
@@ -242,6 +242,46 @@ void loop()
     Serial.print("InfluxDB connection failed: ");
     Serial.println(client.getLastErrorMessage());
   }
+
+  // client.writePoint(sensorReadings);
+
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    Serial.println("Wifi connection lost");
+    //  Save data to SPIFFS if USB power is not present
+    saveDataToSPIFFS(temperature, batteryVoltage);
+  }
+  else
+  {
+    // Upload data from SPIFFS if WiFi connection is restored
+    if (client.validateConnection())
+    {
+      Serial.print("Connected to InfluxDB: ");
+      Serial.println(client.getServerUrl());
+    }
+    else
+    {
+      Serial.print("InfluxDB connection failed: ");
+      Serial.println(client.getLastErrorMessage());
+    }
+    // Upload data from SPIFFS if WiFi connection is restored
+    uploadDataFromSPIFFS();
+    Serial.print("Writing: ");
+    Serial.println(client.pointToLineProtocol(sensorReadings));
+    client.writePoint(sensorReadings);
+    Serial.println(client.writePoint(sensorReadings));
+    sensorReadings.clearFields();
+  }
+  // Read battery voltage
+  float currentBatteryVoltage = ums3.getBatteryVoltage();
+
+  // Check if battery voltage is below 3.60V or 4 hours have elapsed (whichever comes first)
+  if ((currentBatteryVoltage < 3.60) || (millis() - startMillis >= 4 * 60 * 60 * 1000 && !ums3.getVbusPresent()))
+  {
+    // Shut down the ESP32
+    // esp_deep_sleep_start();
+    Serial.println("esp 32 will turn off now");
+  }
   // Send data to InfluxDB if USB power is present
   if (ums3.getVbusPresent() == 0)
   {
@@ -264,34 +304,6 @@ void loop()
     // wifiMulti.disconnect();
     //  Save data to SPIFFS if USB power is not present
     saveDataToSPIFFS(temperature, batteryVoltage);
-  }
-  // client.writePoint(sensorReadings);
-
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.println("Wifi connection lost");
-    //  Save data to SPIFFS if USB power is not present
-    saveDataToSPIFFS(temperature, batteryVoltage);
-  }
-  else
-  {
-    // Upload data from SPIFFS if WiFi connection is restored
-    uploadDataFromSPIFFS();
-    Serial.print("Writing: ");
-    Serial.println(client.pointToLineProtocol(sensorReadings));
-    client.writePoint(sensorReadings);
-    Serial.println(client.writePoint(sensorReadings));
-    sensorReadings.clearFields();
-  }
-  // Read battery voltage
-  float currentBatteryVoltage = ums3.getBatteryVoltage();
-
-  // Check if battery voltage is below 3.60V or 4 hours have elapsed (whichever comes first)
-  if ((currentBatteryVoltage < 3.60) || (millis() - startMillis >= 4 * 60 * 60 * 1000 && !ums3.getVbusPresent()))
-  {
-    // Shut down the ESP32
-    // esp_deep_sleep_start();
-    Serial.println("esp 32 will turn off now");
   }
   Serial.println("Wait 30s");
   delay(30000);
