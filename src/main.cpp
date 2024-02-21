@@ -129,6 +129,7 @@ void uploadDataFromSPIFFS()
       Serial.println(client.pointToLineProtocol(sensorReadings));
 
       client.writePoint(sensorReadings);
+       Serial.println(client.writePoint(sensorReadings));
     }
     else
     {
