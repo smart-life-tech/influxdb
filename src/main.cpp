@@ -116,12 +116,23 @@ void uploadDataFromSPIFFS()
 
   while (file.available())
   {
+
+      if (client.validateConnection())
+    {
+      Serial.print("Connected to InfluxDB: ");
+      Serial.println(client.getServerUrl());
+    }
+    else
+    {
+      Serial.print("InfluxDB connection failed: ");
+      Serial.println(client.getLastErrorMessage());
+    }
     DataPoint dataPoint;
     size_t bytesRead = file.read((uint8_t *)&dataPoint, sizeof(DataPoint));
 
     if (bytesRead == sizeof(DataPoint))
     {
-      sensorReadings.clearFields();
+      
       sensorReadings.addField("temperature", dataPoint.temperature);
       sensorReadings.addField("battery_voltage", dataPoint.batteryVoltage);
 
@@ -130,6 +141,7 @@ void uploadDataFromSPIFFS()
 
       client.writePoint(sensorReadings);
        Serial.println(client.writePoint(sensorReadings));
+      sensorReadings.clearFields();
     }
     else
     {
